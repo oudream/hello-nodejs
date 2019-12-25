@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<br>
+<label id="labelInfo0"></label>
+<br>
+<br>
+<label id="labelInfo1"></label>
+<br>
+<br>
+<label id="labelInfo2"></label>
+<br>
+<br>
+<label id="labelInfo3"></label>
+<br>
+<br>
+<label id="labelInfo4"></label>
+<br>
+<br>
+<label id="labelStatu0"></label>
+<br>
+<br>
+<label id="labelStatu1"></label>
+<br>
+<br>
+<label id="labelStatu2"></label>
+<br>
+<br>
+<label id="labelStatu3"></label>
+<br>
+<br>
+<label id="labelStatu4"></label>
+<br>
+<br>
+
+<script>
+    var testWebSocketStarted = false;
+
+    var sentCache = [];
+    var receivedCache = [];
+
+    var iLableInfoIndex = 0;
+    var outInfo = function (message) {
+        iLableInfoIndex++;
+        var name = "labelInfo" + String(iLableInfoIndex % 5);
+        var lable = document.getElementById(name);
+        if (lable) {
+            lable.innerHTML = (new Date()).toString() + '   ' +  message;
+        }
+    };
+
+    var iLableStatuIndex = 0;
+    var outStatu = function (message) {
+        iLableStatuIndex++;
+        var name = "labelStatu" + String(iLableStatuIndex % 5);
+        var lable = document.getElementById(name);
+        if (lable) {
+            lable.innerHTML = (new Date()).toString() + '   ' +  message;
+        }
+    };
+
+    var pushSentCache = function () {
+        if (sentCache.length > 1024) {
+            outStatu('warn : sentCache Server : sentCache.length > 1024 : clear!');
+            sentCache = [];
+        }
+        var obj = {
+            data: "A wiki is run using wiki software, otherwise known as a wiki engine. A wiki engine is a type of content management system, but it differs from most other such systems, including blog software, in that the content is created without any defined owner or leader, and wikis have little inherent structure, allowing structure to emerge according to the needs of the users.[2] There are dozens of different wiki engines in use, both standalone and part of other software, such as bug tracking systems. Some wiki engines are open source, whereas others are proprietary. Some permit control over different functions (levels of access); for example, editing rights may permit changing, adding, or removing material. Others may permit access without enforcing access control. Other rules may be imposed to organize content.or removing material. Others may permit access without enforcing access control.",
+            dt: Date.now()
+        };
+        var sobj = JSON.stringify(obj);
+        sentCache.push(sobj + sobj + sobj + sobj);
+    };
+
+    var pushReceivedCache = function (obj) {
+        if (receivedCache.length > 1024) {
+            outInfo('info : receivedCache Server : receivedCache.length > 1024 : clear!');
+            receivedCache = [];
+        }
+        receivedCache.push(obj);
+    };
+
+    var sentBytes = 0;
+    var sentTime = Date.now();
+    var sentStageMaxBytes = 4096 * 200;
+    var sentStageTimeNext = Date.now() + 1000;
+    var sentStageBytes = 0;
+    var sentStageReturnTimes = 0;
+    var receivedTime = Date.now();
+
+    setInterval(function () {
+        for (let j = 0; j < sentStageMaxBytes / 4096 / 2; j++) {
+            pushSentCache();
+        }
+    }, 1000);
+
+    function testWebSocket() {
+        outStatu('testWebSocket begin:');
+
+        // Create WebSocket connection.
+        const socket = new WebSocket('ws://10.32.50.57:7091');
+
+        // Send TestData
+        var sendTestData = function () {
+            var sObj = sentCache.pop();
+            if (sObj) {
+                var dtNow = Date.now();
+                if (dtNow < sentStageTimeNext) {
+                    if (sentStageBytes > sentStageMaxBytes) {
+                        sentStageReturnTimes++;
+                        return;
+                    }
+                } else {
+                    sentStageTimeNext = dtNow + 1000;
+                    sentStageBytes = 0;
+                }
+                socket.send(sObj);
+                sentBytes += sObj.length;
+                sentStageBytes += sObj.length;
+                sentTime = Date.now();
+            }
+        };
+
+        var sendTimeOut = setInterval(function () {
+            if (sentCache.length > 0 && Date.now() - sentTime > 1000) {
+                if (testWebSocketStarted)
+                    sendTestData();
+            }
+        }, 1000);
+
+        // Connection opened
+        socket.addEventListener('open', function (event) {
+            sentBytes = 0;
+            testWebSocketStarted = true;
+            sentStageTimeNext = Date.now() + 1000;
+            outStatu('Open Server!');
+            sendTestData();
+        });
+
+        // Connection opened
+        socket.addEventListener('close', function (event) {
+            testWebSocketStarted = false;
+            clearInterval(sendTimeOut);
+            outStatu('Close Server!');
+        });
+
+        // Listen for messages
+        socket.addEventListener('message', function (event) {
+            receivedTime = Date.now();
+            try {
+                pushReceivedCache(JSON.parse(event.data));
+            }
+            catch (e) {
+                outStatu('error: JSON.parse(event.data)');
+            }
+            sendTestData();
+//        console.log('Message from server ', event.data);
+        });
+    }
+
+    setInterval(function () {
+        outInfo('Send Message: sentBytes= ' + String(sentBytes / 1024 / 1024) + ' Mb, sentStageReturnTimes= ' + String(sentStageReturnTimes));
+        var topWindow = window.top;
+        topWindow.wsHeartJumpTime = Date.now();
+    }, 3000);
+
+    setInterval(function () {
+        if (! testWebSocketStarted || Date.now() - receivedTime > 1000 * 30) {
+            testWebSocket();
+        }
+    }, 10000);
+
+    testWebSocket();
+</script>
+</body>
+</html>

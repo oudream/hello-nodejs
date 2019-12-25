@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+<script>
+    var testWebSocketStarted = false;
+
+    function testWebSocket() {
+        testWebSocketStarted = true;
+
+        // Create WebSocket connection.
+        const socket = new WebSocket('ws://localhost:7091');
+
+        var connected = false;
+        // Connection opened
+        socket.addEventListener('open', function (event) {
+            connected = true;
+            console.log('Open Server!');
+        });
+
+        // Connection opened
+        socket.addEventListener('close', function (event) {
+            connected = false;
+            testWebSocketStarted = false;
+            console.log('Close Server!');
+        });
+
+        // Listen for messages
+        socket.addEventListener('message', function (event) {
+            console.log('Message from server ', event.data);
+        });
+
+        var sentbytes = 0;
+        var message = "A wiki is run using wiki software, otherwise known as a wiki engine. A wiki engine is a type of content management system, but it differs from most other such systems, including blog software, in that the content is created without any defined owner or leader, and wikis have little inherent structure, allowing structure to emerge according to the needs of the users.[2] There are dozens of different wiki engines in use, both standalone and part of other software, such as bug tracking systems. Some wiki engines are open source, whereas others are proprietary. Some permit control over different functions (levels of access); for example, editing rights may permit changing, adding, or removing material. Others may permit access without enforcing access control. Other rules may be imposed to organize content.or removing material. Others may permit access without enforcing access control. Other rules may be imposed to organize content.or removing material. Others may permit access without enforcing access control.!.";
+        setInterval(function () {
+            if (connected) {
+                for (let j = 0; j < 100; j++) {
+                    for (let i = 0; i < 1024; i++) {
+                        socket.send(message);
+                        sentbytes += message.length;
+                    }
+                }
+            }
+        }, 1000);
+
+        setInterval(function () {
+            console.log('Send Message: #%d Mb', sentbytes / message.length / 1024);
+        }, 5000);
+    }
+
+    setInterval(function () {
+        if (! testWebSocketStarted) {
+            testWebSocket();
+        }
+    }, 10000);
+
+    testWebSocket();
+</script>
+</body>
+</html>

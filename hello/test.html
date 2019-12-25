@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+</head>
+<body>
+</body>
+<script>
+    const rtData = [{'neno': 1929838593, 'code': 'YG550H01_YX_0000', 'SignalNo': 81721823488, 'SignalName': '命令_下发'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0001', 'SignalNo': 81721823489, 'SignalName': '煤种_下发'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0002', 'SignalNo': 81721823490, 'SignalName': '重量百位_下发'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0003', 'SignalNo': 81721823491, 'SignalName': '重量十位_下发'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0004', 'SignalNo': 81721823492, 'SignalName': '重量个位_下发'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0005', 'SignalNo': 81721823493, 'SignalName': '湿度_下发'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0006', 'SignalNo': 81721823494, 'SignalName': '粒度_下发'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0007', 'SignalNo': 81721823495, 'SignalName': 'ASM550H1#遥信0007'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0008', 'SignalNo': 81721823496, 'SignalName': 'ASM550H1#遥信0008'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0009', 'SignalNo': 81721823497, 'SignalName': 'ASM550H1#遥信0009'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0010', 'SignalNo': 81721823498, 'SignalName': 'ASM550H1#遥信0010'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0011', 'SignalNo': 81721823499, 'SignalName': 'ASM550H1#遥信0011'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0012', 'SignalNo': 81721823500, 'SignalName': 'ASM550H1#遥信0012'}, {'neno': 1929838593, 'code': 'YG550H01_YX_0013', 'SignalNo': 81721823501, 'SignalName': 'ASM550H1#遥信0013'}];
+
+    let retReqMeasuresJson = JSON.stringify({
+        session: Date.now().toString(),
+        structtype: 'rtdata_v101',
+        params: rtData,
+    });
+    let count = 0;
+    socketConnect(retReqMeasuresJson);
+    function socketConnect(datas) {
+        let lastSendTime = null;
+        let time = Date.now();
+        let socket = new WebSocket('ws://10.32.50.57:7091');
+        function sendData() {
+            for (let i = 0; i < 100; i++) {
+                for (let j = 0; j <1024; j++) {
+                    socket.send(datas);
+                    count++;
+                }
+            }
+            if (Date.now() - time > 5000 ) {
+                console.log(`send data count:${count},time:${time}`);
+                time = Date.now();
+            }
+            lastSendTime = Date.now();
+        }
+        socket.addEventListener('open', function(event) {
+            sendData();
+        });
+
+        socket.addEventListener('message', function(event) {
+            if (event.data !== '404') {
+                if (Date.now() - time > 5000 ) {
+                    console.log(`get data count:${count},data:${event.data},time:${Data.now()}`);
+                }
+                setTimeout(sendData, 1000);
+            }
+        });
+
+        let timer = setInterval(function() {
+            if (Date.now() - lastSendTime > 15000) {
+                sendData();
+                console.log('lastSendTime is outTime!');
+            }
+        }, 5000);
+
+        socket.addEventListener('close', function(event) {
+            console.log('socket reconnect' + Date.now());
+            localStorage.setItem('reconnect', Date.now()+',' + event.code);
+            clearInterval(timer);
+            socketConnect();
+        });
+    }
+</script>
+</html>
