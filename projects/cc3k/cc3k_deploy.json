@@ -1,0 +1,24 @@
+{
+  "database": {
+    "mysql1": {
+      "connectionLimit": 10,
+      "database1": "db1",
+      "database": "mi3_arch",
+      "host": "127.0.0.1",
+      "pwd": "123456",
+      "type": "mysql",
+      "user": "root"
+    },
+    "oracle1": {
+      "connectionLimit": 10,
+      "database": "ICS",
+      "host": "10.31.58.125",
+      "pwd": "ICS",
+      "type": "oracle",
+      "user": "ICS"
+    }
+  },
+  "cc4000": {
+    "deployPath": "/eee/ics3000"
+  }
+}

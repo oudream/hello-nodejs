@@ -1,0 +1,26 @@
+{
+  "database":
+  {
+    "mysql1":
+    {
+      "connectionLimit": 10,
+      "dsn": "asm550h",
+      "host": "127.0.0.1",
+      "pwd": "123456",
+      "type": "mysql",
+      "user": "root"
+    },
+    "oracle2":
+    {
+      "connectionLimit": 10,
+      "dsn": "ICS",
+      "host": "10.31.58.125",
+      "pwd": "ICS",
+      "type": "oracle",
+      "user": "ICS"
+    }
+  },
+  "cc4000" : {
+    "deployPath" : "/eee/ICS4000"
+  }
+}

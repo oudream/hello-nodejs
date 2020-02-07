@@ -1,0 +1,42 @@
+{
+  "kind": "project.config.simple",
+  "metadata": {
+    "name": ""
+  },
+  "spec": {
+    "databases": [
+      {
+        "name": "mysql1",
+        "type": "mysql",
+        "connectionLimit": 10,
+        "database": "db1",
+        "host": "127.0.0.1",
+        "pwd": "123456",
+        "user": "root"
+      },
+      {
+        "name": "oracle1",
+        "type": "oracle",
+        "connectionLimit": 10,
+        "database": "ICS",
+        "host": "10.31.58.125",
+        "pwd": "ICS",
+        "user": "ICS"
+      }
+    ],
+    "httpServers": [
+      {
+        "listeningPort": 8991,
+        "staticAssetsPath": "./../../assets",
+        "routes": [
+          {
+            "specItem": "databases",
+            "name": "mysql1",
+            "url": "/ics.cgi/sql"
+          }
+        ]
+      }
+    ]
+  }
+}
+
